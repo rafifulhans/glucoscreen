@@ -12,9 +12,11 @@ use Illuminate\Support\Facades\Validator;
 
 class PengunjungController extends Controller
 {
-    public function index(){
+    public function index(Request $request){
+        $perPage = $request->input('per_page', 10);
+
         return response()->json([
-            'data' => Pengunjung::where('kader_id', Kader::where('user_id', auth()->user()->user_id)->first()->id)->get()
+            'data' => Pengunjung::where('kader_id', Kader::where('user_id', auth()->user()->user_id)->first()->id)->orderByDesc('created_at')->paginate($perPage)
             // 'data' => Pengunjung::with('kader', 'posyandu')->where('kader_id', Kader::where('user_id', auth()->user()->user_id)->first()->id)->get()
         ], 200);
     }

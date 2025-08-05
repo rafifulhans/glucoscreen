@@ -20,6 +20,11 @@ class Kader extends Authenticatable
         return $this->belongsTo(User::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function pengunjungs()
     {
         return $this->hasMany(Pengunjung::class);

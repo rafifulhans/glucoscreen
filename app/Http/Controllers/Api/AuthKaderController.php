@@ -29,7 +29,15 @@ class AuthKaderController extends Controller
             return response()->json(['message' => 'User bukan kader'], 401);
         }
         
-        $kader = Kader::where('user_id', $user->id)->first();
+        $kader = Kader::with('user:id,name,username')
+                        ->select('id', 'user_id', 'pemimpin_user_id')
+                        ->where('user_id', $user->id)
+                        ->first();
+
+        $kader['name'] = $kader->user->name;
+        $kader['username'] = $kader->user->username;
+
+        unset($kader['user']);
 
         $token = $kader->createToken('kader-token')->plainTextToken;
 

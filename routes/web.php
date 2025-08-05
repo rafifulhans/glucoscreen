@@ -44,3 +44,12 @@ Route::middleware(['auth', 'pemimpin'])->group(function(){
     Route::post('/kader', [PemimpinController::class, 'kader_store'])->name('pemimpin.kader.store');
     Route::get('/pengunjung', [PemimpinController::class, 'pengunjung'])->name('pemimpin.pengunjung');
 });
+
+Route::get('/download-apk', function () {
+    $filePath = public_path('storage/apk/glucoscreen.apk');
+    if (file_exists($filePath)) {
+        return response()->download($filePath, 'glucoscreen.apk');
+    } else {
+        abort(404, 'File not found');
+    }
+});
