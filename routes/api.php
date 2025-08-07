@@ -12,4 +12,5 @@ Route::get('/informasi', [InformasiController::class, 'index']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/pengunjung', [PengunjungController::class, 'index']);
     Route::post('/pengunjung', [PengunjungController::class, 'store']);
+    Route::get('/pengunjung/{date}', [PengunjungController::class, 'showByDate']);
 });

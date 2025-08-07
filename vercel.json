@@ -10,6 +10,12 @@
         {
             "src": "/assets/(.*)", "dest": "public/assets/"
         },
+        {
+            "src": "/apk/(.*)", "dest": "public/apk/$1"
+        },
+        {
+            "src": "/ipa/(.*)", "dest": "public/ipa/$1"
+        },
         { 
             "src": "/(.*)", "dest": "/api/index.php" 
         }

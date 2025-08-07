@@ -30,4 +30,26 @@ class PosyanduController extends Controller
 
         return redirect()->back();
     }
+
+    public function destroy($id)
+    {
+        $posyandu = Posyandu::find($id);
+        $posyandu->delete();
+
+        Alert::success('Berhasil', 'Posyandu berhasil dihapus!');
+
+        return redirect()->back();
+    }
+
+    public function update(Request $request, $id)
+    {
+        $posyandu = Posyandu::find($id);
+        $posyandu->nama = $request->input('nama');
+        $posyandu->alamat = $request->input('alamat');
+        $posyandu->save();
+
+        Alert::success('Berhasil', 'Posyandu berhasil diupdate!');
+
+        return redirect()->back();
+    }
 }

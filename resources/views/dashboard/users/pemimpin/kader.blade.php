@@ -32,6 +32,7 @@
                     <th>Nama</th>
                     <th>Username</th>
                     <th>Password</th>
+                    <th>Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -46,8 +47,77 @@
                                 <i class="ti ti-eye" aria-hidden="true"></i>
                             </span>
                         </td>
+                        <td>
+                            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editKaderModal{{ $kader->id }}">
+                                <i class="ti ti-pencil"></i>  
+                                Edit
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#hapusKaderModal{{ $kader->id }}">
+                                <i class="ti ti-trash"></i>  
+                                Hapus
+                            </button>
                         </td>
                     </tr>
+
+                    <!-- Modal Edit Kader -->
+                    <div class="modal fade" id="editKaderModal{{ $kader->id }}" tabindex="-1" role="dialog"
+                        aria-labelledby="editKaderModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="editKaderModalLabel">Edit Kader</h5>
+                                </div>
+                                <div class="modal-body">
+                                    <form action="{{ route('pemimpin.kader.update', $kader->id) }}" method="POST">
+                                        @csrf
+                                        @method('PUT')
+                                        <div class="form-group mb-3">
+                                            <label for="name">Nama</label>
+                                            <input type="text" class="form-control" id="name" name="name" value="{{ $kader->name }}"
+                                                placeholder="Masukkan nama">
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="username">Username</label>
+                                            <input type="text" class="form-control" id="username" name="username" value="{{ $kader->username }}"
+                                                placeholder="Masukkan username">
+                                        </div>
+                                        <div class="form-group mb-3">
+                                            <label for="password">Password</label>
+                                            <input type="password" class="form-control" id="password" name="password"placeholder="Masukkan password">
+                                        </div>
+
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                                            <button type="submit" class="btn btn-primary">Simpan</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Modal Hapus Kader -->
+                    <div class="modal fade" id="hapusKaderModal{{ $kader->id }}" tabindex="-1" role="dialog"
+                        aria-labelledby="hapusKaderModalLabel" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="hapusKaderModalLabel">Hapus Kader</h5>
+                                </div>
+                                <div class="modal-body">
+                                    <p>Apakah Anda yakin ingin menghapus kader {{ $kader->name }}?</p>
+                                                                </div>
+                                <div class="modal-footer">
+                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                                    <form action="{{ route('pemimpin.kader.destroy', $kader->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit" class="btn btn-danger">Hapus</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 @endforeach
             </tbody>
         </table>

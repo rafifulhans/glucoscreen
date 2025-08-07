@@ -26,7 +26,6 @@ return new class extends Migration {
             $table->integer('total_kader')->default(0);
             $table->integer('total_pengunjung')->default(0);
             $table->unsignedBigInteger('user_id')->nullable();
-            $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });
 

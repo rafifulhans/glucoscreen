@@ -60,6 +60,32 @@ class PemimpinController extends Controller
         return redirect()->back();
     }
 
+    public function kader_update(Request $request, $id) {
+        $request->validate([
+            'name'     => 'required|min:3',
+            'username' => 'required|unique:users,username,' . $id,
+            'password' => 'required|min:8'
+        ]);
+
+        $kader = User::find($id);
+        $kader->name = $request->name;
+        $kader->username = $request->username;
+        $kader->password = bcrypt($request->password);
+        $kader->readable_password = $request->password;
+        $kader->save();
+
+        Alert::success('Berhasil', 'Kader berhasil diupdate!');
+        return redirect()->back();
+    }
+
+    public function kader_destroy($id) {
+        $kader = User::find($id);
+        $kader->delete();
+
+        Alert::success('Berhasil', 'Kader berhasil dihapus!');
+        return redirect()->back();
+    }
+
     public function pengunjung() {
         $pengunjungs = Pengunjung::where('posyandu_id', Posyandu::where('user_id', auth()->user()->id)->first()->id)->orderbyDesc('created_at')->get();
 
@@ -67,4 +93,5 @@ class PemimpinController extends Controller
             'pengunjungs' => $pengunjungs
         ]);
     }
+    
 }

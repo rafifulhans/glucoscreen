@@ -54,7 +54,6 @@
         }
 
         .login-btn {
-            margin-top: 30px;
             padding: 12px 30px;
             font-size: 1rem;
             border-radius: 30px;
@@ -91,13 +90,30 @@
                 Glucomove, dan pelatihan kader untuk hidup lebih sehat.
             </p>
 
-            @if (auth()->check())
-                <a href="{{ route(auth()->user()->role . '.dashboard') }}" class="btn btn-outline-primary rounded-pill">
-                    Dashboard
-                </a>
-            @else
-                <a href="{{ route('login') }}" class="btn login-btn">Login</a>
-            @endif
+            <div class="mt-3">
+                @if (auth()->check())
+                    <a href="{{ route(auth()->user()->role . '.dashboard') }}" class="btn btn-outline-primary btn-lg rounded-pill">
+                        Dashboard
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="btn login-btn">Login</a>
+                @endif
+            </div>
+
+            <div class="d-flex justify-content-center mt-3 gap-3">
+                <div>
+                    <a href="{{ url('/apk/glucoscreen.apk') }}" class="btn login-btn bg-success" download>
+                        <i class="ti ti-download"></i>
+                        Download App
+                    </a>
+                </div>
+                <div>
+                    <a href="itms-services://?action=download-manifest&url=https://glucoscreen.vercel.app/ipa/manifest.plist" class="btn login-btn bg-primary" download>
+                        <i class="ti ti-download"></i>
+                        Install (iOS)
+                    </a>
+                </div>
+            </div>
         </div>
     </div>
 
