@@ -6,7 +6,7 @@
             <span>1 Pemimpin hanya untuk 1 Posyandu</span>
         </div>
         <div class="d-flex justify-content-end mb-3">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#daftarkanPosyanduModal">
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#daftarkanPosyanduModal">
                 Daftarkan Posyandu
             </button>
         </div>
@@ -31,13 +31,13 @@
                                     <td>{{ $posyandu->total_kader }}</td>
                                     <td>{{ $posyandu->total_pengunjung }}</td>
                                     <td>
-                                        <button type="button" class="btn btn-primary btn-sm" data-toggle="modal"
-                                            data-target="#editPosyanduModal{{ $posyandu->id }}">
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#editPosyanduModal{{ $posyandu->id }}">
                                             <i class="ti ti-pencil"></i>
                                             Edit
                                         </button>
-                                        <button type="button" class="btn btn-danger btn-sm" data-toggle="modal"
-                                            data-target="#hapusPosyanduModal{{ $posyandu->id }}">
+                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal"
+                                            data-bs-target="#hapusPosyanduModal{{ $posyandu->id }}">
                                             <i class="ti ti-trash"></i>
                                             Hapus
                                         </button>
@@ -68,7 +68,7 @@
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary"
-                                                            data-dismiss="modal">Batal</button>
+                                                            data-bs-dismiss="modal">Batal</button>
                                                         <button type="submit" class="btn btn-primary">Simpan</button>
                                                     </div>
                                                 </form>
@@ -90,7 +90,7 @@
                                             </div>
                                             <div class="modal-footer">
                                                 <button type="button" class="btn btn-secondary"
-                                                    data-dismiss="modal">Batal</button>
+                                                    data-bs-dismiss="modal">Batal</button>
                                                 <form action="{{ route('posyandu.destroy', $posyandu->id) }}" method="POST">
                                                     @csrf
                                                     @method('DELETE')
@@ -132,7 +132,7 @@
                                     class="form-control"></textarea>
                             </div>
                             <div class="modal-footer">
-                                <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                                 <button type="submit" class="btn btn-primary">Daftarkan</button>
                             </div>
                         </form>

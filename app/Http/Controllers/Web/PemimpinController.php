@@ -22,7 +22,13 @@ class PemimpinController extends Controller
     }
 
     public function kader() {
-        $kaders = User::where('role', 'kader')->orderByDesc('created_at')->paginate(10);
+        // Hanya tampilkan kader milik pemimpin yang sedang login
+        $kaders = User::where('role', 'kader')
+            ->whereHas('kader', function ($query) {
+                $query->where('pemimpin_user_id', auth()->user()->id);
+            })
+            ->orderByDesc('created_at')
+            ->paginate(10);
 
         return view('dashboard.users.pemimpin.kader', [
             'kaders' => $kaders

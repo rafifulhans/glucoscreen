@@ -13,4 +13,9 @@ class User extends Authenticatable
     protected $fillable = ['nama', 'username', 'password', 'role'];
 
     protected $hidden = ['password'];
+
+    public function kader()
+    {
+        return $this->hasOne(Kader::class, 'user_id');
+    }
 }
