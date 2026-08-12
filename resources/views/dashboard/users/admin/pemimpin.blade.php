@@ -21,7 +21,7 @@
     @endif
     <!-- Halaman Pemimpin -->
     <div class="container mt-5">
-        @if(count($posyandus) == 0)
+        @if(!$is_posyandu_added)
             <div class="alert alert-warning">
                 <b class="fs-4" style="color: #f0ad4e;">Perhatian!</b>
                 <hr>
@@ -33,119 +33,128 @@
             </div>
         @endif
         <div class="d-flex justify-content-end mb-4">
-            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#tambahPemimpinModal" {{ count($posyandus) == 0 ? 'disabled' : '' }}>
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#tambahPemimpinModal" {{ !$is_posyandu_added ? 'disabled' : '' }}>
                 Tambah Pemimpin
             </button>
         </div>
-        <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Nama</th>
-                    <th>Username</th>
-                    <th>Password</th>
-                    <th>Dari Posyandu</th>
-                    <th>Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @foreach($pemimpins as $pemimpin)
-                    <tr>
-                        <td>{{ $pemimpin->name }}</td>
-                        <td>{{ $pemimpin->username }}</td>
-                        <td>
-                            <input type="password" class="readable_password" id="readble_password_{{ $pemimpin->id }}"
-                                value="{{ $pemimpin->readable_password }}" readonly>
-                            <span class="toggle-password">
-                                <i class="ti ti-eye" aria-hidden="true"></i>
-                            </span>
-                        </td>
-                        <td>{{ \App\Models\Posyandu::with('user')->where('user_id', $pemimpin->id)->first()->nama ?? 'Posyandu tidak ditemukan' }}
-                        </td>
-                        <td>
-                            <button type="button" class="btn btn-primary btn-sm" data-toggle="modal" data-target="#editPemimpinModal{{ $pemimpin->id }}">
-                                <i class="ti ti-pencil"></i>    
-                                Edit
-                            </button>
-                            <button type="button" class="btn btn-danger btn-sm" data-toggle="modal" data-target="#hapusPemimpinModal{{ $pemimpin->id }}">
-                                <i class="ti ti-trash"></i>    
-                                Hapus
-                            </button>
-                        </td>
-                    </tr>
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-stripped mb-0 text-nowrap varient-table align-middle fs-3">
+                        <thead>
+                            <tr>
+                                <th>Nama</th>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>Dari Posyandu</th>
+                                <th>Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($pemimpins as $pemimpin)
+                                <tr>
+                                    <td>{{ $pemimpin->name }}</td>
+                                    <td>{{ $pemimpin->username }}</td>
+                                    <td>
+                                        <input type="password" class="readable_password" id="readble_password_{{ $pemimpin->id }}"
+                                            value="{{ $pemimpin->readable_password }}" readonly>
+                                        <span class="toggle-password">
+                                            <i class="ti ti-eye" aria-hidden="true"></i>
+                                        </span>
+                                    </td>
+                                    <td>{{ \App\Models\Posyandu::with('user')->where('user_id', $pemimpin->id)->first()->nama ?? 'Posyandu tidak ditemukan' }}
+                                    </td>
+                                    <td>
+                                        <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#editPemimpinModal{{ $pemimpin->id }}">
+                                            <i class="ti ti-pencil"></i>    
+                                            Edit
+                                        </button>
+                                        <button type="button" class="btn btn-danger btn-sm" data-bs-toggle="modal" data-bs-target="#hapusPemimpinModal{{ $pemimpin->id }}">
+                                            <i class="ti ti-trash"></i>    
+                                            Hapus
+                                        </button>
+                                    </td>
+                                </tr>
 
-                    <!-- Modal Edit Pemimpin -->
-                    <div class="modal fade" id="editPemimpinModal{{ $pemimpin->id }}" tabindex="-1" role="dialog"
-                        aria-labelledby="editPemimpinModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="editPemimpinModalLabel">Edit Pemimpin</h5>
-                                </div>
-                                <div class="modal-body">
-                                    <form action="{{ route('admin.pemimpin.update', $pemimpin->id) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="form-group mb-3">
-                                            <label for="name">Nama</label>
-                                            <input type="text" class="form-control" id="name" name="name" value="{{ $pemimpin->name }}"
-                                                placeholder="Masukkan nama">
-                                        </div>
-                                        <div class="form-group mb-3">
-                                            <label for="username">Username</label>
-                                            <input type="text" class="form-control" id="username" name="username" value="{{ $pemimpin->username }}"
-                                                placeholder="Masukkan username">
-                                        </div>
-                                        <div class="form-group mb-3">
-                                            <label for="password">Password</label>
-                                            <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password">
-                                                                                </div>
-                                        <div class="form-group mb-3">
-                                            <label for="posyandu_id">Posyandu</label>
-                                            <select class="form-control" id="posyandu_id" name="posyandu_id">
-                                                <option disabled selected>-- Pilih Posyandu --</option>
-                                                @foreach($posyandus as $p)
-                                                    @if($p->id == $pemimpin->posyandu->id)
-                                                        <option value="{{ $p->id }}" {{ (old('posyandu_id') ?? $pemimpin->posyandu->id) == $p->id ? 'selected' : '' }}>{{ $p->nama }}</option>
-                                                    @endif
-                                                @endforeach
-                                            </select>
-                                        </div>
+                                <!-- Modal Edit Pemimpin -->
+                                <div class="modal fade" id="editPemimpinModal{{ $pemimpin->id }}" tabindex="-1" role="dialog"
+                                    aria-labelledby="editPemimpinModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="editPemimpinModalLabel">Edit Pemimpin</h5>
+                                            </div>
+                                            <div class="modal-body">
+                                                <form action="{{ route('admin.pemimpin.update', $pemimpin->id) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <div class="form-group mb-3">
+                                                        <label for="name">Nama</label>
+                                                        <input type="text" class="form-control" id="name" name="name" value="{{ $pemimpin->name }}"
+                                                            placeholder="Masukkan nama">
+                                                    </div>
+                                                    <div class="form-group mb-3">
+                                                        <label for="username">Username</label>
+                                                        <input type="text" class="form-control" id="username" name="username" value="{{ $pemimpin->username }}"
+                                                            placeholder="Masukkan username">
+                                                    </div>
+                                                    <div class="form-group mb-3">
+                                                        <label for="password">Password</label>
+                                                        <input type="password" class="form-control" id="password" name="password" placeholder="Masukkan password">
+                                                                                            </div>
+                                                    <div class="form-group mb-3">
+                                                        <label for="posyandu_id">Posyandu</label>
+                                                        <select class="form-control" id="posyandu_id" name="posyandu_id">
+                                                            <option disabled selected>-- Pilih Posyandu --</option>
+                                                            @foreach($posyandus as $p)
+                                                                @if($p->id != ($pemimpin->posyandu->id ?? ''))
+                                                                    <option value="{{ $p->id }}" {{ (old('posyandu_id') ?? $pemimpin->posyandu->id) == $p->id ? 'selected' : '' }}>{{ $p->nama }}</option>
+                                                                @endif
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
 
-                                        <div class="modal-footer">
-                                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn btn-primary">Simpan</button>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                        <button type="submit" class="btn btn-primary">Simpan</button>
+                                                    </div>
+                                                </form>
+                                            </div>
                                         </div>
-                                    </form>
+                                    </div>
                                 </div>
-                            </div>
-                        </div>
+
+                                <!-- Modal Hapus Pemimpin -->
+                                <div class="modal fade" id="hapusPemimpinModal{{ $pemimpin->id }}" tabindex="-1" role="dialog"
+                                    aria-labelledby="hapusPemimpinModalLabel" aria-hidden="true">
+                                    <div class="modal-dialog modal-dialog-centered" role="document">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="hapusPemimpinModalLabel">Hapus Pemimpin</h5>
+                                            </div>
+                                            <div class="modal-body">
+                                                <p>Apakah Anda yakin ingin menghapus pemimpin {{ $pemimpin->name }}?</p>
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                                                <form action="{{ route('admin.pemimpin.destroy', $pemimpin->id) }}" method="POST">
+                                                    @csrf
+                                                    @method('DELETE')
+                                                    <button type="submit" class="btn btn-danger">Hapus</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </tbody>
+                    </table>
+                    <div class="mt-3">
+                        {{ $pemimpins->links() }}
                     </div>
-
-                    <!-- Modal Hapus Pemimpin -->
-                    <div class="modal fade" id="hapusPemimpinModal{{ $pemimpin->id }}" tabindex="-1" role="dialog"
-                        aria-labelledby="hapusPemimpinModalLabel" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered" role="document">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="hapusPemimpinModalLabel">Hapus Pemimpin</h5>
-                                </div>
-                                <div class="modal-body">
-                                    <p>Apakah Anda yakin ingin menghapus pemimpin {{ $pemimpin->name }}?</p>
-                                </div>
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
-                                    <form action="{{ route('admin.pemimpin.destroy', $pemimpin->id) }}" method="POST">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-danger">Hapus</button>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                @endforeach
-            </tbody>
-        </table>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Modal Tambah Pemimpin -->
@@ -186,7 +195,7 @@
                         </div>
 
                         <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-dismiss="modal">Batal</button>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
                             <button type="submit" class="btn btn-primary">Tambah</button>
                         </div>
                     </form>

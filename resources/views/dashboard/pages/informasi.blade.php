@@ -23,12 +23,12 @@
                     <p class="text-center text-muted">Belum ada informasi</p>
                 @else
                     <div class="row bg-light rounded mb-4 text-dark">
-                        <div class="col col-sm-1 col-md-2 col-lg-2">
+                        <div class="col-12 col-sm-12 col-md-12 col-lg-2">
                             <div class="text-center py-2">
                                 <b>Judul</b>
                             </div>
                         </div>
-                        <div class="col col-sm-11 col-md-10 col-lg-10">
+                        <div class="col-12 col-sm-12 col-md-12 col-lg-10">
                             <div class="text-center py-2">
                                 <b>Isi</b>
                             </div>
@@ -39,7 +39,7 @@
                         @csrf
                         @foreach ($informasis as $informasi)
                             <div class="form-group row">
-                                <div class="col col-sm-1 col-md-2 col-lg-2">
+                                <div class="col-12 col-sm-12 col-md-12 col-lg-2">
                                     <div class="d-flex flex-column justify-content-between h-100 align-items-end">
                                         <input type="text" class="form-control"
                                             value="{{ old('judul_informasi[' . $informasi->id . ']') ?? $informasi->judul }}"
@@ -55,7 +55,7 @@
                                                         </span> -->
                                     </div>
                                 </div>
-                                <div class="col col-sm-11 col-md-10 col-lg-10">
+                                <div class="col-12 col-sm-12 col-md-12 col-lg-10">
                                     <textarea name="isi_informasi[{{ $informasi->id }}]" rows="12"
                                         class="form-control">{{ old('isi_informasi[' . $informasi->id . ']') ?? $informasi->isi }}</textarea>
                                 </div>

@@ -22,7 +22,7 @@ class PemimpinController extends Controller
     }
 
     public function kader() {
-        $kaders = User::where('role', 'kader')->orderByDesc('created_at')->get();
+        $kaders = User::where('role', 'kader')->orderByDesc('created_at')->paginate(10);
 
         return view('dashboard.users.pemimpin.kader', [
             'kaders' => $kaders
@@ -64,14 +64,19 @@ class PemimpinController extends Controller
         $request->validate([
             'name'     => 'required|min:3',
             'username' => 'required|unique:users,username,' . $id,
-            'password' => 'required|min:8'
+            'password' => 'nullable|min:8'
         ]);
 
         $kader = User::find($id);
         $kader->name = $request->name;
         $kader->username = $request->username;
-        $kader->password = bcrypt($request->password);
-        $kader->readable_password = $request->password;
+        
+        // Only update password if provided
+        if ($request->filled('password')) {
+            $kader->password = bcrypt($request->password);
+            $kader->readable_password = $request->password;
+        }
+        
         $kader->save();
 
         Alert::success('Berhasil', 'Kader berhasil diupdate!');

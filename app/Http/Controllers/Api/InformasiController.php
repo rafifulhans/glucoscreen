@@ -11,7 +11,9 @@ class InformasiController extends Controller
 {
     public function index(){
         return response()->json([
-            'data' => Informasi::all()
+            'data' => Informasi::whereNotNull('isi')
+                ->where('isi', '!=', '')
+                ->get()
         ], 200);
     }
 }

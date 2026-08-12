@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\AdminController;
 use App\Http\Controllers\Web\InformasiController;
 use App\Http\Controllers\Web\PosyanduController;
 use App\Http\Controllers\Web\PemimpinController;
+use App\Http\Controllers\Web\ModulEdukasiController;
 
 Route::get('/', function () {
     return view('home');
@@ -30,6 +31,14 @@ Route::middleware('auth')->group(function(){
     Route::put('/posyandu/{id}/update', [PosyanduController::class, 'update'])->name('posyandu.update');
 
     Route::get('/logout', [AuthController::class, 'logout'])->name('logout');
+});
+
+// Modul edukasi hanya bisa diakses oleh admin
+Route::middleware(['auth', 'admin'])->group(function() {
+    Route::get('/modul-edukasi', [ModulEdukasiController::class, 'index'])->name('modul');
+    Route::post('/modul-edukasi', [ModulEdukasiController::class, 'store'])->name('modul.store');
+    Route::put('/modul-edukasi/{id}/update', [ModulEdukasiController::class, 'update'])->name('modul.update');
+    Route::delete('/modul-edukasi/{id}/destroy', [ModulEdukasiController::class, 'destroy'])->name('modul.destroy');
 });
 
 

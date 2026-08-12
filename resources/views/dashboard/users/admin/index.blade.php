@@ -12,37 +12,38 @@
         </div>
     @enderror
 
-    <div class="container my-5">
-        <div class="row">
-            <div class="col col-md-4 col-lg-4">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="card-title bg-primary text-white p-2 rounded">Total Pemimpin</h3>
-                        <div class="card-text mt-4">
-                            <h2 class="text-muted">{{ $total_pemimpin }}</h2>
-                        </div>
-                    </div>
+    <div class="gs-welcome">
+        <div class="subtitle">Ringkasan Data</div>
+        <h2>Dashboard Admin</h2>
+        <div class="caption">Pantau seluruh data kesehatan secara real-time</div>
+    </div>
+
+    <div class="row g-3">
+        <div class="col-12 col-md-4">
+            <div class="gs-stat-card">
+                <div class="gs-stat-top">
+                    <div class="gs-stat-icon teal"><i class="ti ti-user"></i></div>
                 </div>
+                <div class="gs-stat-label">Total Pemimpin</div>
+                <div class="gs-stat-value">{{ $total_pemimpin }}</div>
             </div>
-            <div class="col col-md-4 col-lg-4">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="card-title bg-secondary text-white p-2 rounded">Total Posyandu</h3>
-                        <div class="card-text mt-4">
-                            <h2 class="text-muted">{{ $total_posyandu }}</h2>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="gs-stat-card">
+                <div class="gs-stat-top">
+                    <div class="gs-stat-icon blue"><i class="ti ti-archive"></i></div>
                 </div>
+                <div class="gs-stat-label">Total Posyandu</div>
+                <div class="gs-stat-value">{{ $total_posyandu }}</div>
             </div>
-            <div class="col col-md-4 col-lg-4">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="card-title bg-info text-white p-2 rounded">Total Kader</h3>
-                        <div class="card-text mt-4">
-                            <h2 class="text-muted">{{ $total_kader }}</h2>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-12 col-md-4">
+            <div class="gs-stat-card">
+                <div class="gs-stat-top">
+                    <div class="gs-stat-icon violet"><i class="ti ti-users"></i></div>
                 </div>
+                <div class="gs-stat-label">Total Kader</div>
+                <div class="gs-stat-value">{{ $total_kader }}</div>
             </div>
         </div>
     </div>

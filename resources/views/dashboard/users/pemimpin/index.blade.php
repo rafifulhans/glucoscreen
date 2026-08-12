@@ -1,28 +1,21 @@
 <x-dashboard>
 
-    <div class="container">
-        <div class="card">
-            <div class="card-body">
-                <div class="d-flex flex-column justify-content-center align-items-center">
-                    <div class="rounded-circle bg-light p-4">
-                        <img src="{{ asset('assets/images/hospital.png') }}" width="100" alt="posyandu">
-                    </div>
-                    <hr>
-                    <h1>{{ \App\Models\Posyandu::with('user')->where('user_id', auth()->user()->id)->first()->nama ?? ''  }}</h1>
-                </div>
-            </div>
+    <div class="gs-profile-card mb-4">
+        <div class="avatar">
+            <i class="ti ti-building-hospital"></i>
         </div>
+        <h1>{{ \App\Models\Posyandu::with('user')->where('user_id', auth()->user()->id)->first()->nama ?? '' }}</h1>
+        <div class="role">Pemimpin Posyandu</div>
+    </div>
 
-        <div class="row">
-            <div class="col col-md-4 col-lg-4">
-                <div class="card text-center">
-                    <div class="card-body">
-                        <h3 class="card-title bg-primary text-white p-2 rounded">Total Kader</h3>
-                        <div class="card-text mt-4">
-                            <h2 class="text-muted">{{ $total_kader }}</h2>
-                        </div>
-                    </div>
+    <div class="row g-3">
+        <div class="col-12 col-md-4">
+            <div class="gs-stat-card">
+                <div class="gs-stat-top">
+                    <div class="gs-stat-icon teal"><i class="ti ti-users"></i></div>
                 </div>
+                <div class="gs-stat-label">Total Kader</div>
+                <div class="gs-stat-value">{{ $total_kader }}</div>
             </div>
         </div>
     </div>

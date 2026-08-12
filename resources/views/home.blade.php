@@ -1,123 +1,103 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name') }}</title>
-    <link rel="stylesheet" href="{{ asset('assets/css/styles.min.css') }}">
+    <title>{{ config('app.name') }} — Cegah & Kelola Hiperglikemia</title>
     <link rel="icon" href="{{ asset('assets/images/logo.png') }}" type="image/x-icon">
-    <style>
-        body,
-        html {
-            height: 100%;
-            margin: 0;
-            background: linear-gradient(to right, #e0f7fa, #f1f8e9);
-            font-family: 'Segoe UI', sans-serif;
-        }
-
-        .center-container {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .hero-box {
-            background-color: #ffffffdd;
-            border-radius: 20px;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            max-width: 980px;
-            width: 100%;
-            text-align: center;
-        }
-
-        .hero-title {
-            font-size: 3rem;
-            font-weight: bold;
-            color: #539bd6;
-        }
-
-        .hero-description {
-            font-size: 1.2rem;
-            margin-top: 20px;
-            color: #424242;
-        }
-
-        .icon-circle {
-            background: #dbeeff;
-            padding: 15px;
-            border-radius: 50%;
-            margin-bottom: 20px;
-            display: inline-block;
-        }
-
-        .login-btn {
-            padding: 12px 30px;
-            font-size: 1rem;
-            border-radius: 30px;
-            background-color: #539bd6;
-            border: none;
-            color: #fff;
-            transition: background-color 0.3s ease;
-        }
-
-        .login-btn:hover {
-            color: white;
-            background-color: #2a5a82ff;
-        }
-    </style>
+    <link rel="stylesheet" href="{{ asset('assets/css/styles.min.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/tabler-icons.css') }}">
+    <link rel="stylesheet" href="{{ asset('assets/css/glucoscreen.css') }}">
 </head>
 
 <body>
+    <div class="gs-bg">
+        <span class="gs-orb-primary"></span>
+        <span class="gs-orb-secondary"></span>
 
-    <div class="container center-container">
-        <div class="hero-box">
-            <div class="icon-circle">
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="#539bd6" class="bi bi-droplet"
-                    viewBox="0 0 16 16">
-                    <path fill-rule="evenodd"
-                        d="M4.22 4.22a.75.75 0 011.06 0 6.49 6.49 0 002.47 1.49 6.49 6.49 0 002.47-1.49.75.75 0 011.06 1.06A8.006 8.006 0 018 7.42a8.006 8.006 0 01-4.22-2.14.75.75 0 010-1.06z" />
-                    <path fill-rule="evenodd"
-                        d="M7.293.293a1 1 0 011.414 0l4.95 4.95a6.5 6.5 0 11-10.607 0l4.95-4.95zM8 1.707L3.05 6.657a5 5 0 107.9 0L8 1.707z" />
-                </svg>
-            </div>
-            <h1 class="hero-title">Glucoscreen</h1>
-            <p class="hero-description">
-                Aplikasi untuk pencegahan dan pengelolaan hiperglikemia melalui edukasi, pemantauan gula darah, pola
-                hidup sehat, serta fitur input data kesehatan. Dilengkapi program komunitas seperti Gluco Garden,
-                Glucomove, dan pelatihan kader untuk hidup lebih sehat.
-            </p>
-
-            <div class="mt-3">
-                @if (auth()->check())
-                    <a href="{{ route(auth()->user()->role . '.dashboard') }}" class="btn btn-outline-primary btn-lg rounded-pill">
-                        Dashboard
-                    </a>
-                @else
-                    <a href="{{ route('login') }}" class="btn login-btn">Login</a>
-                @endif
-            </div>
-
-            <div class="d-flex justify-content-center mt-3 gap-3">
-                <div>
-                    <a href="{{ url('/apk/glucoscreen.apk') }}" class="btn login-btn bg-success" download>
-                        <i class="ti ti-download"></i>
-                        Download App
-                    </a>
+        <div class="gs-landing">
+            <!-- Navbar -->
+            <nav class="gs-nav">
+                <a href="{{ route('home') }}" class="gs-brand">
+                    <img src="{{ asset('assets/images/logo.png') }}" alt="{{ config('app.name') }}">
+                    {{ config('app.name') }}
+                </a>
+                <div class="gs-nav-links">
+                    <a href="#fitur">Fitur</a>
+                    @if (auth()->check())
+                        <a href="{{ route(auth()->user()->role . '.dashboard') }}" class="gs-btn gs-btn-primary">
+                            <i class="ti ti-layout-dashboard"></i> Dashboard
+                        </a>
+                    @else
+                        <a href="{{ route('login') }}" class="gs-btn gs-btn-ghost">
+                            <i class="ti ti-login"></i> Masuk
+                        </a>
+                    @endif
                 </div>
+            </nav>
+
+            <!-- Hero -->
+            <section class="gs-hero">
                 <div>
-                    <a href="itms-services://?action=download-manifest&url=https://glucoscreen.vercel.app/ipa/manifest.plist" class="btn login-btn bg-primary" download>
-                        <i class="ti ti-download"></i>
-                        Install (iOS)
-                    </a>
+                    <span class="gs-hero-badge gs-fade-up" style="animation-delay:.1s">
+                        <i class="ti ti-heartbeat"></i> Pencegahan Hiperglikemia
+                    </span>
+                    <h1 class="gs-fade-up" style="animation-delay:.25s">
+                        Hidup Sehat,
+                        <span class="gs-title-gradient">Gula Darah Terkontrol</span>
+                    </h1>
+                    <p class="gs-fade-up" style="animation-delay:.4s">
+                        <strong>{{ config('app.name') }}</strong> membantu mencegah &amp; mengelola hiperglikemia melalui
+                        edukasi, pemantauan gula darah, pola hidup sehat, dan program komunitas
+                        <strong>Gluco Garden</strong>, Glucomove, serta pelatihan kader.
+                    </p>
+                    <div class="gs-hero-actions gs-fade-up" style="animation-delay:.55s">
+                        <a href="https://glucoscreen.vercel.app/apk/glucoscreen.apk" class="gs-btn gs-btn-primary" download>
+                            <i class="ti ti-brand-android"></i> Unduh APK Android
+                        </a>
+                        <a href="itms-services:///?action=download-manifest&url=https://glucoscreen.vercel.app/ipa/manifest.plist" class="gs-btn gs-btn-blue">
+                            <i class="ti ti-brand-apple"></i> Unduh iOS
+                        </a>
+                    </div>
                 </div>
-            </div>
+
+                <!-- Hero image -->
+                <div class="gs-hero-image">
+                    <img src="{{ asset('assets/images/gs-hero.png') }}" alt="Ilustrasi pemantauan gula darah"
+                        class="gs-hero-img" loading="lazy" decoding="async">
+                </div>
+            </section>
+
+            <!-- Features -->
+            <section class="gs-features" id="fitur">
+                <h2>Fitur Unggulan</h2>
+                <div class="gs-features-sub">Segala yang Anda butuhkan untuk menjaga kadar gula darah tetap sehat dan terkontrol.</div>
+                <div class="gs-features-grid">
+                    <div class="gs-feature-card gs-fade-up" style="animation-delay:.2s">
+                        <div class="gs-feature-icon"><i class="ti ti-activity-heartbeat"></i></div>
+                        <h3>Pemantauan Gula Darah</h3>
+                        <p>Catat dan pantau kadar gula darah Anda secara rutin dengan tampilan yang sederhana dan mudah dipahami.</p>
+                    </div>
+                    <div class="gs-feature-card gs-fade-up" style="animation-delay:.35s">
+                        <div class="gs-feature-icon"><i class="ti ti-books"></i></div>
+                        <h3>Edukasi Kesehatan</h3>
+                        <p>Dapatkan informasi dan edukasi seputar hiperglikemia serta pola hidup sehat untuk keluarga.</p>
+                    </div>
+                    <div class="gs-feature-card gs-fade-up" style="animation-delay:.5s">
+                        <div class="gs-feature-icon"><i class="ti ti-users"></i></div>
+                        <h3>Program Komunitas</h3>
+                        <p>Ikuti program Gluco Garden, Glucomove, dan pelatihan kader bersama komunitas posyandu terdekat.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Footer -->
+            <footer class="gs-footer">
+                &copy; {{ date('Y') }} {{ config('app.name') }} — Cegah & Kelola Hiperglikemia. Dibuat dengan <i class="ti ti-heart-filled" style="color:var(--gs-danger);"></i>
+            </footer>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/iconify-icon@1.0.8/dist/iconify-icon.min.js"></script>
 </body>
-
 </html>

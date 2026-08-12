@@ -5,6 +5,7 @@
         <x-dashboard.sidebar-link icon="ti ti-archive" link="{{ route('posyandu') }}" title="Posyandu" />
         <x-dashboard.sidebar-link icon="ti ti-user" link="{{ route('admin.pemimpin') }}" title="Pemimpin" />
         <x-dashboard.sidebar-link icon="ti ti-help" link="{{ route('informasi') }}" title="Informasi" />
+        <x-dashboard.sidebar-link icon="ti ti-books" link="{{ route('modul') }}" title="Modul Edukasi" />
         @break
     @case('pemimpin')
         <x-dashboard.sidebar-link icon="ti ti-users" link="{{ route('pemimpin.kader') }}" title="Kader" />

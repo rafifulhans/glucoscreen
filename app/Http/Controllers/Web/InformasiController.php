@@ -12,7 +12,9 @@ class InformasiController extends Controller
 {
     public function __invoke()
     {
-        $informasis = Informasi::all();
+        $informasis = Informasi::whereNotNull('isi')
+            ->where('isi', '!=', '')
+            ->get();
         
         return view('dashboard.pages.informasi', [
             'informasis' => $informasis,

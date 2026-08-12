@@ -74,6 +74,76 @@ class PengunjungController extends Controller
     }
 
     /**
+     * Mengambil daftar seluruh pengunjung yang pernah diverifikasi (riwayat),
+     * diurutkan dari terbaru ke terlama, dengan dukungan pagination untuk infinite scroll.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function riwayat(Request $request)
+    {
+        try {
+            // Pastikan user terautentikasi sebelum mencoba mengakses auth()->user()
+            if (!auth()->check()) {
+                throw new AuthenticationException('Unauthenticated.');
+            }
+
+            $perPage = (int) $request->query('per_page', 10);
+
+            // Ambil kader dari token yang terautentikasi
+            $kader = Kader::where('user_id', auth()->user()->user_id)->first();
+
+            if (!$kader) {
+                return response()->json(['message' => 'Kader tidak ditemukan untuk pengguna yang terautentikasi.'], 404);
+            }
+
+            // Ambil seluruh pengunjung milik kader yang terautentikasi
+            // Diurutkan dari terbaru ke terlama berdasarkan tanggal_kunjungan dan created_at
+            $pengunjungPaginated = Pengunjung::where('kader_id', $kader->id)
+                ->orderBy('tanggal_kunjungan', 'desc')
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
+
+            // Format data untuk response mobile
+            $formattedData = $pengunjungPaginated->getCollection()->map(function ($item) {
+                return [
+                    'id'                 => (int) $item->id,
+                    'nama'               => (string) $item->nama,
+                    'nik'                => (string) $item->nik,
+                    'alamat'             => (string) $item->alamat,
+                    'tanggal_kunjungan'  => (string) $item->tanggal_kunjungan,
+                    'gds'                => (float) $item->gds,
+                    'created_at'         => (string) $item->created_at?->toISOString(),
+                ];
+            })->values();
+
+            return response()->json([
+                'data' => [
+                    'current_page' => $pengunjungPaginated->currentPage(),
+                    'data' => $formattedData,
+                    'first_page_url' => $pengunjungPaginated->url(1),
+                    'from' => $pengunjungPaginated->firstItem(),
+                    'last_page' => $pengunjungPaginated->lastPage(),
+                    'last_page_url' => $pengunjungPaginated->url($pengunjungPaginated->lastPage()),
+                    'next_page_url' => $pengunjungPaginated->nextPageUrl(),
+                    'path' => $pengunjungPaginated->path(),
+                    'per_page' => $pengunjungPaginated->perPage(),
+                    'prev_page_url' => $pengunjungPaginated->previousPageUrl(),
+                    'to' => $pengunjungPaginated->lastItem(),
+                    'total' => $pengunjungPaginated->total(),
+                ]
+            ], 200);
+        } catch (AuthenticationException $e) {
+            return response()->json(['message' => $e->getMessage()], 401);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan server saat mengambil riwayat data.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Mengambil detail pengunjung berdasarkan tanggal tertentu dengan paginasi.
      *
      * @param  \Illuminate\Http\Request  $request
@@ -143,6 +213,8 @@ class PengunjungController extends Controller
                 'alamat' => 'required|string',
                 'tanggal_kunjungan' => 'required|date',
                 'gds' => 'required|numeric',
+                'kategori' => 'nullable|string|in:normal,prediabetes,diabetes',
+                'gejala_klasik' => 'nullable|string',
             ]);
 
             if ($validator->fails()) {
@@ -169,7 +241,9 @@ class PengunjungController extends Controller
                 'alamat' => $request->alamat,
                 'gds' => $request->gds,
                 'kader_id' => $kader->id,
-                'posyandu_id' => $posyandu->id
+                'posyandu_id' => $posyandu->id,
+                'kategori' => $request->kategori, // Optional: dari diagnosis
+                'gejala_klasik' => $request->gejala_klasik, // Optional: dari diagnosis
             ]);
 
             return response()->json([

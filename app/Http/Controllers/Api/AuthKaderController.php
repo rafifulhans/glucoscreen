@@ -34,6 +34,10 @@ class AuthKaderController extends Controller
                         ->where('user_id', $user->id)
                         ->first();
 
+        if (!$kader) {
+            return response()->json(['message' => 'Kader tidak ditemukan'], 404);
+        }
+
         $kader['name'] = $kader->user->name;
         $kader['username'] = $kader->user->username;
 

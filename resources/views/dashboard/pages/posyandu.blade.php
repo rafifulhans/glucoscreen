@@ -13,7 +13,7 @@
         <div class="card">
             <div class="card-body">
                 <div class="table-responsive mt-4">
-                    <table class="table table-stripped mb-0 text-nowrap varient-table align-middle fs-3">
+                    <table class="table table-striped mb-0 text-nowrap align-middle fs-3">
                         <thead>
                             <tr>
                                 <th scope="col" class="text-start">Nama Posyandu</th>
@@ -103,6 +103,9 @@
                             @endforeach
                         </tbody>
                     </table>
+                </div>
+                <div class="mt-3">
+                    {{ $posyandus->links() }}
                 </div>
             </div>
         </div>

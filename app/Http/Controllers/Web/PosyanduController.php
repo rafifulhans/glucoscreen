@@ -12,7 +12,7 @@ class PosyanduController extends Controller
 {
     public function __invoke()
     {
-        $posyandus = Posyandu::orderByDesc('created_at')->get();
+        $posyandus = Posyandu::orderByDesc('created_at')->paginate(10);
 
         return view('dashboard.pages.posyandu', [
             'posyandus' => $posyandus
@@ -34,9 +34,20 @@ class PosyanduController extends Controller
     public function destroy($id)
     {
         $posyandu = Posyandu::find($id);
-        $posyandu->delete();
-
-        Alert::success('Berhasil', 'Posyandu berhasil dihapus!');
+        
+        if (empty($posyandu)) 
+        {
+            Alert::success('Berhasil', 'Posyandu berhasil dihapus!');    
+        } else {
+            
+            if (!is_null($posyandu->user_id)) 
+            {
+                Alert::error('Gagal', 'Posyandu masih memiliki pemimpin! Silahkan hapus pemimpin terlebih dahulu atau ganti ke posyandu lain!');
+            } else {
+                $posyandu->delete();
+                Alert::success('Berhasil', 'Posyandu berhasil dihapus!');
+            }
+        }
 
         return redirect()->back();
     }

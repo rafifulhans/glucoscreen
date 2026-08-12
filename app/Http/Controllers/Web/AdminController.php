@@ -26,17 +26,20 @@ class AdminController extends Controller
     }
 
     public function pemimpin() {
-        $pemimpins = User::where('role', 'pemimpin')->orderByDesc('id')->get();
+        $pemimpins = User::where('role', 'pemimpin')->orderByDesc('id')->paginate(10);
 
         foreach($pemimpins as $pemimpin) {
             $pemimpin->posyandu = Posyandu::where('user_id', $pemimpin->id)->first();
         }
 
-        $posyandus = Posyandu::all();
+        $posyandus = Posyandu::where('user_id', null)->get();
+
+        $is_posyandu_added = !empty(Posyandu::first()) ? true : false;
 
         return view('dashboard/users/admin/pemimpin', [
             'pemimpins' => $pemimpins,
-            'posyandus' => $posyandus
+            'posyandus' => $posyandus,
+            'is_posyandu_added' => $is_posyandu_added
         ]);
     }
 
@@ -70,16 +73,28 @@ class AdminController extends Controller
         $request->validate([
             'name'     => 'required|min:3',
             'username' => 'required|unique:users,username,' . $id,
-            'password' => 'required',
+            'password' => 'nullable|min:8',
             'posyandu_id' => 'required'
         ]);
 
         $pemimpin = User::find($id);
         $pemimpin->name = $request->name;
         $pemimpin->username = $request->username;
-        $pemimpin->password = bcrypt($request->password);
-        $pemimpin->readable_password = $request->password;
+        
+        // Only update password if provided
+        if ($request->filled('password')) {
+            $pemimpin->password = bcrypt($request->password);
+            $pemimpin->readable_password = $request->password;
+        }
+        
         $pemimpin->save();
+
+        $old_posyandu = Posyandu::where('user_id', $id)->first();
+        if ($old_posyandu) 
+        {
+            $old_posyandu->user_id = null;
+            $old_posyandu->save();
+        }
 
         $posyandu = Posyandu::find($request->posyandu_id);
         $posyandu->user_id = $pemimpin->id;
@@ -92,8 +107,11 @@ class AdminController extends Controller
     public function pemimpin_destroy($id)
     {
         $posyandu = Posyandu::where('user_id', $id)->first();
-        $posyandu->user_id = null;
-        $posyandu->save();
+        if (!empty($posyandu)) 
+        {
+            $posyandu->user_id = null;
+            $posyandu->save();   
+        }
 
         $pemimpin = User::find($id);
         $pemimpin->delete();

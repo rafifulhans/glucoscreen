@@ -16,7 +16,9 @@ class Pengunjung extends Model
         'tanggal_kunjungan',
         'gds',
         'kader_id',
-        'posyandu_id'
+        'posyandu_id',
+        'kategori',
+        'gejala_klasik'
     ];
 
     public function kader()
