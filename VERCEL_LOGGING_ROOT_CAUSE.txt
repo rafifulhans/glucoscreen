@@ -1,0 +1,40 @@
+VERCEL ROOT CAUSE FIX
+=========================================
+
+PROBLEM:
+The fatal error was a CASCADE of two issues:
+
+1. ROOT CAUSE: "Class Pdo\MySql not found"
+   - config/database.php referenced Pdo\MySql::ATTR_SSL_CA
+   - On Vercel PHP runtime (remi/php81), this class resolves differently
+   - Triggered an exception during config loading
+
+2. CASCADE: Laravel tried to LOG that exception
+   - Default log channel pointed to storage/logs/laravel.log
+   - Vercel filesystem is READ-ONLY (except /tmp)
+   - Could not create directory -> fatal StreamHandler error
+
+SOLUTIONS APPLIED:
+
+1. config/database.php:
+   - Removed Pdo\MySql::ATTR_SSL_CA reference
+   - Set 'options' => [] cleanly
+   - No more "Class Pdo\MySql not found" on Vercel
+
+2. config/logging.php:
+   - 'default' => 'stderr' (hardcoded, not env-dependent)
+   - 'single' path -> /tmp/laravel.log (writable)
+   - 'daily' path -> /tmp/laravel.log (writable)
+   - 'emergency' -> php://stderr (no file write)
+   - stack uses stderr only (no file write)
+
+HOW TO DEPLOY:
+
+git add config/database.php config/logging.php
+  git commit -m "fix: resolve Pdo\MySql class and stderr logging for Vercel"
+  git push origin main
+
+VERIFY:
+- Check Vercel deploy logs
+- The app should now load without fatal error
+- Database connection uses MYSQL_ATTR_SSL_CA only if needed (removed)
