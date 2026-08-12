@@ -1,0 +1,35 @@
+VERCEL DEPLOYMENT FIX SUMMARY
+==============================
+
+PROBLEM 1: Function size exceeds 250MB
+- Excluded vendor/, apk/, ipa/ from deployment
+- Added comprehensive .vercelignore
+
+PROBLEM 2: vendor/autoload.php not found
+- Added buildCommand to vercel.json
+- Created vercel-build.sh script
+- Script runs: composer install --no-dev --optimize-autoloader
+
+FILES MODIFIED:
+1. .vercelignore - Updated exclusions
+2. vercel.json - Added buildCommand
+3. vercel-build.sh - Created build script
+
+DEPLOYMENT FLOW:
+1. Git push triggers deployment
+2. Vercel uploads files (without vendor/)
+3. Vercel runs: ./vercel-build.sh
+4. Script runs: composer install
+5. vendor/ created on Vercel
+6. Function deployed with vendor/ included
+
+EXPECTED RESULT:
+- Function size: ~120MB (under 250MB limit)
+- vendor/ exists at runtime
+- All dependencies available
+
+NEXT STEPS:
+git add .vercelignore vercel.json vercel-build.sh
+git commit -m 'fix: add Vercel build script for composer install'
+git push origin main
+

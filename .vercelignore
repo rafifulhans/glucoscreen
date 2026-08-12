@@ -1,5 +1,5 @@
-# Laravel directories
-vendor
+# Laravel directories - vendor will be installed during build
+vendor/
 storage/logs/*
 storage/framework/cache/*
 storage/framework/sessions/*
@@ -34,7 +34,6 @@ Thumbs.db
 
 # Laravel specific
 bootstrap/cache/*
-composer.lock
-composer.json
-package-lock.json
-package.json
+
+# Build script (needed for deployment)
+!vercel-build.sh

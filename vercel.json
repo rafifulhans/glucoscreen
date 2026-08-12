@@ -21,6 +21,12 @@
         }
     ],
     "outputDirectory": "public",
+    "build": {
+        "env": {
+            "COMPOSER_PROCESS_TIMEOUT": "600"
+        }
+    },
+    "buildCommand": "./vercel-build.sh",
     "env": {
         "APP_ENV": "production",
         "APP_DEBUG": "false",
