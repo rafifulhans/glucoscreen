@@ -1,0 +1,54 @@
+VERCEL LOGGING FIX - READ-ONLY FILESYSTEM
+=========================================
+
+PROBLEM:
+Fatal error: There is no existing directory at "/var/task/user/storage/logs"
+and it could not be created: Read-only file system
+
+ROOT CAUSE:
+- Vercel serverless functions have READ-ONLY filesystem
+- Laravel tries to create storage/logs directory for logging
+- This fails because filesystem is read-only
+- The error occurs when Laravel tries to log the PDO MySQL error
+
+SOLUTION:
+1. Changed default log channel from 'stack' to 'stderr'
+2. Updated stack channel to use 'stderr' instead of 'single'
+3. Updated emergency channel to use stderr instead of file
+
+FILES MODIFIED:
+1. config/logging.php - Changed all logging to use stderr
+
+CHANGES IN config/logging.php:
+
+Line 20:
+  BEFORE: 'default' => env('LOG_CHANNEL', 'stack'),
+  AFTER:  'default' => env('LOG_CHANNEL', 'stderr'),
+
+Line 56:
+  BEFORE: 'channels' => ['single'],
+  AFTER:  'channels' => ['stderr'],
+
+Lines 118-122:
+  BEFORE: 'path' => storage_path('logs/laravel.log'),
+  AFTER:
+  'driver' => 'monolog',
+  'handler' => StreamHandler::class,
+  'with' => [
+      'stream' => 'php://stderr',
+  ],
+
+HOW IT WORKS:
+- stderr logs go to Vercel's logging system
+- No need to create files or directories
+- Vercel captures stderr output automatically
+
+VERCEL ENV VARS (already set):
+LOG_CHANNEL=stderr
+APP_DEBUG=false
+
+DEPLOY:
+git add config/logging.php
+git commit -m 'fix: use stderr logging for Vercel serverless'
+git push origin main
+
