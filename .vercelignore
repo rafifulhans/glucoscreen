@@ -20,10 +20,6 @@ tests
 .vscode
 .idea
 
-# Mobile app binaries (tidak perlu di-deploy ke Vercel)
-apk
-ipa
-
 # Documentation (opsional, bisa dihapus jika tidak diperlukan di production)
 *.md
 !README.md
