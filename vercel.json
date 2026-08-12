@@ -43,7 +43,7 @@
         "SESSION_DRIVER": "cookie",
         "DB_CONNECTION": "mysql",
         "DB_HOST": "glucoscreen-glucoscreen.h.aivencloud.com",
-        "DB_PORT": "61002",
+        "DB_PORT": "13956",
         "DB_DATABASE": "defaultdb",
         "DB_USERNAME": "avnadmin"
     }
