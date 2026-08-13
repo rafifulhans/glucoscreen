@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Pengunjung;
 use App\Models\Kader;
 use App\Models\Posyandu;
+use App\Services\DiagnosaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
@@ -113,6 +114,8 @@ class PengunjungController extends Controller
                     'alamat'             => (string) $item->alamat,
                     'tanggal_kunjungan'  => (string) $item->tanggal_kunjungan,
                     'gds'                => (float) $item->gds,
+                    'kategori'           => $item->kategori,
+                    'gejala_klasik'      => $item->gejala_klasik,
                     'created_at'         => (string) $item->created_at?->toISOString(),
                 ];
             })->values();
@@ -214,7 +217,9 @@ class PengunjungController extends Controller
                 'tanggal_kunjungan' => 'required|date',
                 'gds' => 'required|numeric',
                 'kategori' => 'nullable|string|in:normal,prediabetes,diabetes',
-                'gejala_klasik' => 'nullable|string',
+                // Diterima dalam bentuk apapun (string / array gejala / boolean),
+                // lalu dinormalisasi menjadi string sebelum disimpan.
+                'gejala_klasik' => 'nullable',
             ]);
 
             if ($validator->fails()) {
@@ -234,6 +239,26 @@ class PengunjungController extends Controller
                 return response()->json(['message' => 'Posyandu tidak ditemukan untuk pemimpin pengguna yang terautentikasi.'], 404);
             }
 
+            // Normalisasi gejala klasik dari input mobile (string / array / boolean)
+            // menjadi sebuah string, sehingga selalu tersimpan bila ada isinya.
+            $gejalaKlasik = $request->gejala_klasik;
+            if (is_array($gejalaKlasik)) {
+                $gejalaKlasik = implode(', ', array_filter($gejalaKlasik, fn ($g) => trim((string) $g) !== ''));
+            }
+            if (is_bool($gejalaKlasik)) {
+                $gejalaKlasik = $gejalaKlasik ? 'Ada' : null;
+            }
+            $gejalaKlasik = ($gejalaKlasik === null || trim((string) $gejalaKlasik) === '')
+                ? null
+                : (string) trim($gejalaKlasik);
+
+            // Kategori ditentukan server-side dari nilai GDS + gejala klasik
+            // menggunakan threshold di tabel informasis (data-driven), BUKAN
+            // bergantung kiriman dari mobile, agar kolom kategori pada tabel
+            // pengunjungs tidak pernah kosong.
+            $gejala = !empty($gejalaKlasik);
+            $kategori = DiagnosaService::tentukanKategori((float) $request->gds, $gejala);
+
             $pengunjung = Pengunjung::create([
                 'tanggal_kunjungan' => $request->tanggal_kunjungan,
                 'nama' => $request->nama,
@@ -242,8 +267,8 @@ class PengunjungController extends Controller
                 'gds' => $request->gds,
                 'kader_id' => $kader->id,
                 'posyandu_id' => $posyandu->id,
-                'kategori' => $request->kategori, // Optional: dari diagnosis
-                'gejala_klasik' => $request->gejala_klasik, // Optional: dari diagnosis
+                'kategori' => $kategori, // Dihitung otomatis dari GDS + gejala (server-side)
+                'gejala_klasik' => $gejalaKlasik, // Dinormalisasi & disimpan bila ada isinya
             ]);
 
             return response()->json([

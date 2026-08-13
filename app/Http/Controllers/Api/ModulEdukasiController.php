@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Informasi;
+use App\Services\DiagnosaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
@@ -20,16 +21,6 @@ class ModulEdukasiController extends Controller
     ];
 
     /**
-     * Mengembalikan modul edukasi yang tersedia, dikelompokkan per kategori.
-     *
-     * Setiap modul dilengkapi materi yang terurut — sajikan materi ke-N pada
-     * slide ke-N (sesuai tampilan web). `terisi` melaporkan apakah kategori
-     * sudah memiliki modul; `semua_terisi` true ketika ketiganya terisi.
-     *
-     * @param  \Illuminate\Http\Request  $request
-     * @return \Illuminate\Http\JsonResponse
-     */
-        /**
      * Mengembalikan modul edukasi yang tersedia, dikelompokkan per kategori.
      *
      * Setiap modul dilengkapi materi yang terurut — sajikan materi ke-N pada
@@ -91,7 +82,7 @@ class ModulEdukasiController extends Controller
                     'semua_terisi'    => $jumlahTerisi >= count(self::KATEGORI),
                 ],
             ], 200);
-                } catch (\Throwable $e) {
+        } catch (\Throwable $e) {
             Log::error('API modul edukasi gagal: ' . $e->getMessage());
 
             return response()->json([
@@ -104,10 +95,12 @@ class ModulEdukasiController extends Controller
      * Menerima POST dari mobile: nilai GDS + gejala klasik, lalu mengembalikan
      * kategori risiko yang sesuai dan modul edukasi untuk kategori tersebut.
      *
-     * Threshold (sejalan dengan modul yang ada):
-     *   - GDS < 126                  -> normal
-     *   - 126 <= GDS <= 199          -> prediabetes
-     *   - GDS >= 200                 -> diabetes
+     * Kategori ditentukan secara DATA-DRIVEN: threshold diambil dari tabel
+     * `informasis` (kolom `gds` tidak kosong & kolom `isi` kosong) melalui
+     * DiagnosaService — bukan hardcode. Operator tiap kategori:
+     *   - normal      : GDS <  batas normal
+     *   - prediabetes : batas prediabetes <= GDS <= batas diabetes
+     *   - diabetes    : GDS >= batas diabetes
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
@@ -129,48 +122,23 @@ class ModulEdukasiController extends Controller
                 ], 422);
             }
 
-            $gds       = (float) $request->input('gds');
-            $nama      = trim($request->input('nama'));
+            $gds        = (float) $request->input('gds');
+            $nama       = trim($request->input('nama'));
             // Konversi string gejala ke boolean: ada isinya = true, kosong/null = false
-            $gejala    = !empty(trim($request->input('gejala_klasik')));
+            $gejala     = !empty(trim($request->input('gejala_klasik')));
             $namaGejala = $gejala ? trim($request->input('gejala_klasik')) : null;
 
-            // Tentukan kategori dengan memeriksa data modul di database
-            // Ambil semua modul yang ada (dengan isi tidak kosong) untuk menentukan kategori
-            $moduls = Informasi::whereNotNull('isi')
-                ->where('isi', '!=', '')
-                ->whereIn('kategori', array_keys(self::KATEGORI))
-                ->get(['kategori', 'gds', 'gejala_klasik']);
-            
-            // Tentukan kategori berdasarkan kecocokan kondisi di database
-            $slug = $this->tentukanKategoriDariModul($gds, $gejala, $moduls);
-            
-            // Ambil modul edukasi berdasarkan kategori yang telah ditentukan
-            $modulQuery = Informasi::where('kategori', $slug);
-            
-            // Filter berdasarkan kriteria spesifik setiap kategori
-            switch ($slug) {
-                case 'normal':
-                    // Normal: GDS <= 125 & gejala_klasik = false
-                    $modulQuery->where('gds', '<=', 125)->where('gejala_klasik', false);
-                    break;
-                    
-                case 'prediabetes':
-                    // Prediabetes: GDS <= 199 & gejala_klasik = false
-                    $modulQuery->where('gds', '<=', 199)->where('gejala_klasik', false);
-                    break;
-                    
-                case 'diabetes':
-                    // Diabetes: GDS >= 200 & gejala_klasik = true
-                    $modulQuery->where('gds', '>=', 200)->where('gejala_klasik', true);
-                    break;
-            }
-            
-            $modul = $modulQuery->orderByDesc('updated_at')->first();
+            // Kategori ditentukan dari threshold di tabel informasis (data-driven),
+            // dengan mempertimbangkan gejala klasik.
+            $slug = DiagnosaService::tentukanKategori($gds, $gejala);
 
-            // Endpoint diagnose TIDAK menyimpan data ke database
-            // Data hanya dibaca dan dikembalikan untuk ditampilkan di mobile
-            // Mobile yang akan memanggil POST /api/pengunjung untuk menyimpan data lengkap
+            // Ambil modul edukasi sesuai kategori hasil diagnosa.
+            $modul = Informasi::where('kategori', $slug)->orderByDesc('updated_at')->first();
+
+            // Endpoint diagnose TIDAK menyimpan data ke database.
+            // Data hanya dibaca dan dikembalikan untuk ditampilkan di mobile;
+            // mobile yang akan memanggil POST /api/pengunjung untuk menyimpan data lengkap
+            // (di sana kategori dihitung ulang server-side sehingga tidak pernah kosong).
 
             return response()->json([
                 'data' => [
@@ -190,89 +158,6 @@ class ModulEdukasiController extends Controller
                 'message' => 'Gagal menilai kategori pasien.',
             ], 500);
         }
-    }
-
-    /**
-     * Menentukan kategori risiko dari nilai GDS dan gejala klasik dengan memeriksa
-     * data modul yang tersedia di database.
-     *
-     * Metode ini mengambil semua modul dari tabel informasis yang memiliki isi,
-     * lalu mencocokkan nilai GDS dan gejala_klasik dengan kondisi di database.
-     *
-     * @param  float  $gds
-     * @param  bool   $gejala
-     * @param  \Illuminate\Database\Eloquent\Collection  $moduls
-     * @return string
-     */
-    protected function tentukanKategoriDariModul(float $gds, bool $gejala, $moduls): string
-    {
-        // Group moduls by kategori untuk memudahkan pencocokan
-        $modulsByKategori = [];
-        foreach ($moduls as $modul) {
-            $kategori = $modul->kategori;
-            if (!isset($modulsByKategori[$kategori])) {
-                $modulsByKategori[$kategori] = [];
-            }
-            $modulsByKategori[$kategori][] = $modul;
-        }
-
-        // Cek setiap kategori untuk menemukan yang cocok
-        // Prioritas: normal -> prediabetes -> diabetes
-        
-        // 1. Cek kategori normal
-        if (isset($modulsByKategori['normal'])) {
-            foreach ($modulsByKategori['normal'] as $modul) {
-                // Cek apakah GDS dan gejala cocok dengan kriteria modul
-                if ($modul->gds !== null && $gds <= $modul->gds && !$gejala) {
-                    return 'normal';
-                }
-            }
-            // Fallback untuk normal: GDS <= 125 dan tidak ada gejala
-            if ($gds <= 125 && !$gejala) {
-                return 'normal';
-            }
-        }
-
-        // 2. Cek kategori prediabetes
-        if (isset($modulsByKategori['prediabetes'])) {
-            foreach ($modulsByKategori['prediabetes'] as $modul) {
-                // Cek apakah GDS dan gejala cocok dengan kriteria modul
-                if ($modul->gds !== null && $gds >= 126 && $gds <= $modul->gds && !$gejala) {
-                    return 'prediabetes';
-                }
-            }
-            // Fallback untuk prediabetes: 126 <= GDS <= 199 dan tidak ada gejala
-            if ($gds >= 126 && $gds <= 199 && !$gejala) {
-                return 'prediabetes';
-            }
-        }
-
-        // 3. Cek kategori diabetes
-        if (isset($modulsByKategori['diabetes'])) {
-            foreach ($modulsByKategori['diabetes'] as $modul) {
-                // Cek apakah GDS dan gejala cocok dengan kriteria modul
-                if ($modul->gds !== null && $gds >= $modul->gds && $gejala) {
-                    return 'diabetes';
-                }
-            }
-            // Fallback untuk diabetes: GDS >= 200 (dengan atau tanpa gejala)
-            if ($gds >= 200) {
-                return 'diabetes';
-            }
-        }
-
-        // 4. Fallback jika tidak ada yang cocok
-        // Prioritas: diabetes > prediabetes > normal
-        if ($gds >= 200) {
-            return 'diabetes';
-        }
-        
-        if ($gds >= 126 && $gds <= 199) {
-            return 'prediabetes';
-        }
-        
-        // Default fallback
-        return 'prediabetes';
     }
 
     /**
