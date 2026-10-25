@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\AdminController;
 use App\Http\Controllers\Web\InformasiController;
 use App\Http\Controllers\Web\PosyanduController;
 use App\Http\Controllers\Web\PemimpinController;
+use App\Http\Controllers\Web\KaderController;
 use App\Http\Controllers\Web\ModulEdukasiController;
 
 Route::get('/', function () {
@@ -57,5 +58,12 @@ Route::middleware(['auth', 'pemimpin'])->group(function(){
     Route::post('/kader', [PemimpinController::class, 'kader_store'])->name('pemimpin.kader.store');
     Route::put('/kader/{id}/update', [PemimpinController::class, 'kader_update'])->name('pemimpin.kader.update');
     Route::delete('/kader/{id}/destroy', [PemimpinController::class, 'kader_destroy'])->name('pemimpin.kader.destroy');
-    Route::get('/pengunjung', [PemimpinController::class, 'pengunjung'])->name('pemimpin.pengunjung');
+    Route::get('/pemimpin/pengunjung', [PemimpinController::class, 'pengunjung'])->name('pemimpin.pengunjung');
+    Route::get('/pemimpin/pengunjung/{nik}/riwayat', [PemimpinController::class, 'pengunjungRiwayat'])->name('pemimpin.pengunjung.riwayat');
+});
+
+Route::middleware(['auth', 'kader'])->group(function() {
+    Route::get('/kader/dashboard', KaderController::class)->name('kader.dashboard');
+    Route::get('/pengunjung', [KaderController::class, 'pengunjung'])->name('kader.pengunjung');
+    Route::get('/pengunjung/{nik}/riwayat', [KaderController::class, 'pengunjungRiwayat'])->name('kader.pengunjung.riwayat');
 });

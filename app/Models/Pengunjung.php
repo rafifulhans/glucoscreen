@@ -13,6 +13,8 @@ class Pengunjung extends Model
         'nama',
         'nik',
         'alamat',
+        'rt',
+        'rw',
         'tanggal_kunjungan',
         'gds',
         'kader_id',

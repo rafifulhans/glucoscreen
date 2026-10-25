@@ -22,7 +22,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/pengunjung', [PengunjungController::class, 'index']);
+    Route::get('/pengunjung/groups', [PengunjungController::class, 'groups']);
     Route::get('/pengunjung/riwayat', [PengunjungController::class, 'riwayat']);
+    Route::get('/pengunjung/detail/{nik}', [PengunjungController::class, 'detailByNik']);
     Route::post('/pengunjung', [PengunjungController::class, 'store']);
     Route::get('/pengunjung/{date}', [PengunjungController::class, 'showByDate']);
 });

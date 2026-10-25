@@ -112,6 +112,8 @@ class PengunjungController extends Controller
                     'nama'               => (string) $item->nama,
                     'nik'                => (string) $item->nik,
                     'alamat'             => (string) $item->alamat,
+                    'rt'                 => $item->rt,
+                    'rw'                 => $item->rw,
                     'tanggal_kunjungan'  => (string) $item->tanggal_kunjungan,
                     'gds'                => (float) $item->gds,
                     'kategori'           => $item->kategori,
@@ -197,8 +199,136 @@ class PengunjungController extends Controller
     }
 
     /**
-     * Menyimpan data pengunjung baru.
-     *
+     * Mengambil detail pengunjung berdasarkan NIK.
+     */
+    public function detailByNik(Request $request, $nik)
+    {
+        try {
+            if (!auth()->check()) {
+                throw new AuthenticationException('Unauthenticated.');
+            }
+            $kader = Kader::where('user_id', auth()->user()->user_id)->first();
+            if (!$kader) {
+                return response()->json(['message' => 'Kader tidak ditemukan untuk pengguna yang terautentikasi.'], 404);
+            }
+            $visits = Pengunjung::where('kader_id', $kader->id)->where('nik', $nik)->orderByDesc('tanggal_kunjungan')->orderByDesc('created_at')->get();
+            if ($visits->isEmpty()) {
+                return response()->json(['message' => 'Tidak ada data pengunjung untuk NIK ini.', 'data' => null], 404);
+            }
+            $first = $visits->sortBy('created_at')->first();
+            $latest = $visits->sortByDesc('created_at')->first();
+            $gdsAwal = $first->gds ?? 0;
+            $gdsLatest = $latest->gds ?? 0;
+            $trend = 'stabil';
+            if ($gdsAwal < $gdsLatest) { $trend = 'naik'; }
+            elseif ($gdsAwal > $gdsLatest) { $trend = 'turun'; }
+            $history = $visits->map(function ($p) {
+                return [
+                    'id' => (int) $p->id,
+                    'tanggal_kunjungan' => (string) $p->tanggal_kunjungan,
+                    'tanggal_formatted' => Carbon::parse($p->tanggal_kunjungan)->format('d M Y'),
+                    'gds' => (float) $p->gds,
+                    'gejala_klasik' => $p->gejala_klasik,
+                    'kategori' => $p->kategori,
+                ];
+            })->values()->toArray();
+            $chartAsc = $visits->sortBy('tanggal_kunjungan')->values();
+            $chartLabels = $chartAsc->map(function ($p) { return Carbon::parse($p->tanggal_kunjungan)->format('d M Y'); })->toArray();
+            $chartData = $chartAsc->map(function ($p) { return (float) $p->gds; })->toArray();
+            return response()->json([
+                'message' => 'Detail pengunjung berhasil diambil.',
+                'data' => [
+                    'info' => [
+                        'nik' => (string) $nik,
+                        'nama' => (string) ($latest->nama ?? ($first->nama ?? '-')),
+                        'alamat' => (string) ($latest->alamat ?? ($first->alamat ?? '-')),
+                        'rt' => $latest->rt ?? ($first->rt ?? null),
+                        'rw' => $latest->rw ?? ($first->rw ?? null),
+                        'gds_terbaru' => (float) $gdsLatest,
+                        'gds_trend' => $trend,
+                        'total_kunjungan' => $visits->count(),
+                    ],
+                    'chart' => ['labels' => $chartLabels, 'data' => $chartData],
+                    'history' => $history,
+                ],
+            ], 200);
+        } catch (AuthenticationException $e) {
+            return response()->json(['message' => $e->getMessage()], 401);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Terjadi kesalahan server saat mengambil detail pengunjung.', 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Mengambil daftar pengunjung yang dikelompokkan (grouped) berdasarkan NIK.
+     * Yang tampil pada list: NIK dan nama (beserta info ringkas), diurutkan
+     * dari yang terakhir kali input data.
+     */
+    public function groups(Request $request)
+    {
+        try {
+            if (!auth()->check()) {
+                throw new AuthenticationException('Unauthenticated.');
+            }
+
+            $kader = Kader::where('user_id', auth()->user()->user_id)->first();
+            if (!$kader) {
+                return response()->json(['message' => 'Kader tidak ditemukan untuk pengguna yang terautentikasi.'], 404);
+            }
+
+            $pengunjungs = Pengunjung::where('kader_id', $kader->id)
+                ->orderBy('tanggal_kunjungan')
+                ->orderBy('created_at')
+                ->get();
+
+            $groups = $pengunjungs
+                ->groupBy('nik')
+                ->sortByDesc(function ($items) {
+                    return $items->max('created_at');
+                })
+                ->map(function ($items, $nik) {
+                    $first = $items->sortBy('created_at')->first();
+                    $latest = $items->sortByDesc('created_at')->first();
+
+                    $gdsAwal = $first->gds ?? 0;
+                    $gdsLatest = $latest->gds ?? 0;
+                    $trend = 'stabil';
+                    if ($gdsAwal < $gdsLatest) {
+                        $trend = 'naik';
+                    } elseif ($gdsAwal > $gdsLatest) {
+                        $trend = 'turun';
+                    }
+
+                    return [
+                        'nik' => (string) $nik,
+                        'nama' => (string) ($latest->nama ?? $first->nama),
+                        'alamat' => (string) ($latest->alamat ?? $first->alamat),
+                        'rt' => $latest->rt ?? $first->rt,
+                        'rw' => $latest->rw ?? $first->rw,
+                        'total_kunjungan' => $items->count(),
+                        'gds_terbaru' => (float) $gdsLatest,
+                        'gds_trend' => $trend,
+                        'last_input_at' => (string) ($items->max('created_at')?->toISOString()),
+                    ];
+                })
+                ->values();
+
+            return response()->json([
+                'message' => 'Daftar pengunjung berhasil diambil.',
+                'data' => $groups,
+            ], 200);
+        } catch (AuthenticationException $e) {
+            return response()->json(['message' => $e->getMessage()], 401);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Terjadi kesalahan server saat mengambil daftar pengunjung.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+
+    /**
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
      */
@@ -214,9 +344,11 @@ class PengunjungController extends Controller
                 'nama' => 'required|string|max:255',
                 'nik' => 'required|string',
                 'alamat' => 'required|string',
+                'rt' => 'nullable|string|max:10',
+                'rw' => 'nullable|string|max:10',
                 'tanggal_kunjungan' => 'required|date',
                 'gds' => 'required|numeric',
-                'kategori' => 'nullable|string|in:normal,prediabetes,diabetes',
+                'kategori' => 'nullable|string|in:normal,prediabetes,diabetes,ketoasidosis',
                 // Diterima dalam bentuk apapun (string / array gejala / boolean),
                 // lalu dinormalisasi menjadi string sebelum disimpan.
                 'gejala_klasik' => 'nullable',
@@ -264,6 +396,8 @@ class PengunjungController extends Controller
                 'nama' => $request->nama,
                 'nik' => $request->nik,
                 'alamat' => $request->alamat,
+                'rt' => $request->rt,
+                'rw' => $request->rw,
                 'gds' => $request->gds,
                 'kader_id' => $kader->id,
                 'posyandu_id' => $posyandu->id,

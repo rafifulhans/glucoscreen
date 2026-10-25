@@ -70,6 +70,7 @@ class Kernel extends HttpKernel
         // Tambahkan ini untuk middleware admin
         'admin' => \App\Http\Middleware\AdminMiddleware::class,
         'pemimpin' => \App\Http\Middleware\PemimpinMiddleware::class,
+        'kader' => \App\Http\Middleware\KaderMiddleware::class,
         'api.admin' => \App\Http\Middleware\ApiAdminMiddleware::class,
     ];
 

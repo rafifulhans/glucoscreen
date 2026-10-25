@@ -17,6 +17,7 @@ class ModulEdukasiController extends Controller
         'normal'      => 'Normal',
         'prediabetes' => 'Prediabetes',
         'diabetes'    => 'Diabetes',
+        'ketoasidosis' => 'Ketoasidosis Diabetik',
     ];
 
     /**
@@ -59,7 +60,7 @@ class ModulEdukasiController extends Controller
     {
         $request->validate([
             'judul'              => 'required|min:3|max:255',
-            'kategori'           => 'required|in:normal,prediabetes,diabetes',
+            'kategori'           => 'required|in:normal,prediabetes,diabetes,ketoasidosis',
             'gejala_klasik'      => 'required|in:0,1',
             'gds'                => 'required|numeric|min:0',
             'hasil_pemeriksaan'  => 'required|min:3',
@@ -99,7 +100,7 @@ class ModulEdukasiController extends Controller
     {
         $request->validate([
             'judul'              => 'required|min:3|max:255',
-            'kategori'           => 'required|in:normal,prediabetes,diabetes',
+            'kategori'           => 'required|in:normal,prediabetes,diabetes,ketoasidosis',
             'gejala_klasik'      => 'required|in:0,1',
             'gds'                => 'required|numeric|min:0',
             'hasil_pemeriksaan'  => 'required|min:3',

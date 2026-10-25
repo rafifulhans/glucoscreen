@@ -9,13 +9,15 @@ class DiagnosaService
     /**
      * Kategori hasil diagnosa GDS beserta label tampilannya.
      *
-     * Urutan array ini juga menyatakan prioritas pengecekan:
-     * normal -> prediabetes -> diabetes.
+     * Ketoasidosis Diabetik adalah kondisi darurat dengan prioritas tertinggi
+     * pada nilai GDS tinggi (300-600 mg/dL dengan gejala klasik), sehingga
+     * dicek sebelum Diabetes.
      */
     public const KATEGORI = [
         'normal'      => 'Normal',
         'prediabetes' => 'Prediabetes',
         'diabetes'    => 'Diabetes',
+        'ketoasidosis' => 'Ketoasidosis Diabetik',
     ];
 
     /**
@@ -37,7 +39,7 @@ class DiagnosaService
      *
      * @param  float  $gds     Nilai GDS dari input mobile (mg/dL)
      * @param  bool   $gejala  Apakah ada gejala klasik (true/false)
-     * @return string          Kategori: normal | prediabetes | diabetes
+     * @return string          Kategori: normal | prediabetes | diabetes | ketoasidosis
      */
     public static function tentukanKategori(float $gds, bool $gejala = false): string
     {
@@ -60,6 +62,7 @@ class DiagnosaService
         $normal      = $batas['normal'] ?? null;
         $prediabetes = $batas['prediabetes'] ?? null;
         $diabetes    = $batas['diabetes'] ?? null;
+        $ketoasidosis = $batas['ketoasidosis'] ?? null;
 
         // a) GDS < batas normal DAN tanpa gejala klasik -> Normal
         if ($normal !== null && $gds < $normal && !$gejala) {
@@ -75,6 +78,15 @@ class DiagnosaService
 
         if ($rentangPrediabetes || $gejalaNormalRendah) {
             return 'prediabetes';
+        }
+
+        // d) Ketoasidosis Diabetik (KONDISI DARURAT): GDS 300-600 mg/dL
+        //    disertai gejala klasik — prioritas di atas Diabetes.
+        if ($ketoasidosis !== null
+            && $gds >= $ketoasidosis
+            && $gds <= 600
+            && $gejala) {
+            return 'ketoasidosis';
         }
 
         // c) GDS >= batas diabetes DAN ada gejala klasik -> Diabetes

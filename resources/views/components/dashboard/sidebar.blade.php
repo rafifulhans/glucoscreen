@@ -7,7 +7,10 @@
         <x-dashboard.sidebar-link icon="ti ti-help" link="{{ route('informasi') }}" title="Informasi" />
         <x-dashboard.sidebar-link icon="ti ti-books" link="{{ route('modul') }}" title="Modul Edukasi" />
         @break
-    @case('pemimpin')
+    @case('kader')
+    <x-dashboard.sidebar-link icon="ti ti-map" link="{{ route('kader.pengunjung') }}" title="Pengunjung" />
+    @break
+@case('pemimpin')
         <x-dashboard.sidebar-link icon="ti ti-users" link="{{ route('pemimpin.kader') }}" title="Kader" />
         <x-dashboard.sidebar-link icon="ti ti-map" link="{{ route('pemimpin.pengunjung') }}" title="Pengunjung" />
         @break

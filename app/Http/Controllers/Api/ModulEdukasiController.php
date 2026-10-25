@@ -18,6 +18,7 @@ class ModulEdukasiController extends Controller
         'normal'      => 'Normal',
         'prediabetes' => 'Prediabetes',
         'diabetes'    => 'Diabetes',
+        'ketoasidosis' => 'Ketoasidosis Diabetik',
     ];
 
     /**

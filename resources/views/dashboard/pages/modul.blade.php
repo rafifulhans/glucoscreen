@@ -22,12 +22,13 @@
             'normal'      => 'success',
             'prediabetes' => 'warning',
             'diabetes'    => 'danger',
+            'ketoasidosis' => 'danger',
         ];
     @endphp
 
     <!-- Tambah Modul -->
     @if (count($taken) >= count($kategori))
-        <div class="alert alert-warning py-2"><i class="ti ti-alert-circle"></i> Semua kategori (Normal, Prediabetes, Diabetes) sudah memiliki modul. Maksimal 1 modul per kategori, jadi form tambah dinonaktifkan. Silakan edit atau hapus modul yang ada jika ingin mengubahnya.</div>
+        <div class="alert alert-warning py-2"><i class="ti ti-alert-circle"></i> Semua kategori (Normal, Prediabetes, Diabetes, Ketoasidosis Diabetik) sudah memiliki modul. Maksimal 1 modul per kategori, jadi form tambah dinonaktifkan. Silakan edit atau hapus modul yang ada jika ingin mengubahnya.</div>
     @else
     <div class="card mb-4">
         <div class="card-body">
@@ -101,7 +102,7 @@
                 <div class="card h-100">
                     <div class="card-body">
                         <h5 class="card-title mb-1">Modul {{ $data['label'] }}</h5>
-                        <p class="text-muted small mb-3">Rule: {{ $slug === 'normal' ? 'GDS < 126 & tanpa gejala' : ($slug === 'prediabetes' ? 'GDS 126-199 atau gejala' : 'GDS >= 200 & bergejala') }}</p>
+                        <p class="text-muted small mb-3">Rule: {{ $slug === 'normal' ? 'GDS < 126 & tanpa gejala' : ($slug === 'prediabetes' ? 'GDS 126-199 atau gejala' : ($slug === 'ketoasidosis' ? 'GDS 300-600 & bergejala (Darurat)' : 'GDS >= 200 & bergejala')) }}</p>
 
                         @forelse ($data['moduls'] as $m)
                             <div class="border rounded p-3 mb-2">

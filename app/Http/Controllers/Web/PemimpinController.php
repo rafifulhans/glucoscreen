@@ -97,12 +97,160 @@ class PemimpinController extends Controller
         return redirect()->back();
     }
 
-    public function pengunjung() {
-        $pengunjungs = Pengunjung::where('posyandu_id', Posyandu::where('user_id', auth()->user()->id)->first()->id)->orderbyDesc('created_at')->get();
+    public function pengunjung(Request $request) {
+        $posyandu = Posyandu::where('user_id', auth()->user()->id)->first();
+
+        $search = trim((string) $request->get('search', ''));
+
+        $groups = [];
+        if ($posyandu) {
+            $pengunjungs = Pengunjung::with('kader.user')
+                ->where('posyandu_id', $posyandu->id)
+                ->orderBy('tanggal_kunjungan')
+                ->orderBy('created_at')
+                ->get();
+
+            $groups = $pengunjungs
+                ->groupBy('nik')
+                ->sortByDesc(function ($items) {
+                    return $items->max('created_at');
+                })
+                ->map(function ($items, $nik) {
+                    $first = $items->sortBy('created_at')->first();
+                    $latest = $items->sortByDesc('created_at')->first();
+
+                    $gdsAwal = $first->gds ?? 0;
+                    $gdsLatest = $latest->gds ?? 0;
+                    $trend = 'stabil';
+                    if ($gdsAwal < $gdsLatest) {
+                        $trend = 'naik';
+                    } elseif ($gdsAwal > $gdsLatest) {
+                        $trend = 'turun';
+                    }
+
+                    $history = $items->sortBy('tanggal_kunjungan')->values()->map(function ($p) {
+                        return [
+                            'id' => (int) $p->id,
+                            'tanggal_kunjungan' => (string) $p->tanggal_kunjungan,
+                            'tanggal_formatted' => \Carbon\Carbon::parse($p->tanggal_kunjungan)->format('d M Y'),
+                            'gds' => (float) $p->gds,
+                            'gejala_klasik' => $p->gejala_klasik,
+                            'kategori' => $p->kategori,
+                            'alamat' => $p->alamat,
+                            'rt' => $p->rt,
+                            'rw' => $p->rw,
+                            'nama' => $p->nama,
+                            'kader' => optional(optional($p->kader)->user)->name,
+                        ];
+                    })->toArray();
+
+                    return [
+                        'nik' => $nik,
+                        'nama' => $latest->nama ?? $first->nama,
+                        'alamat' => $latest->alamat ?? $first->alamat,
+                        'rt' => $latest->rt ?? $first->rt,
+                        'rw' => $latest->rw ?? $first->rw,
+                        'total_kunjungan' => $items->count(),
+                        'gds_terbaru' => $gdsLatest,
+                        'gds_trend' => $trend,
+                        'gds_history' => $history,
+                        'kunjungan_list' => $history,
+                    ];
+                })
+                ->values()
+                ->toArray();
+        }
+
+        if ($search !== '') {
+            $groups = array_values(array_filter($groups, function ($g) use ($search) {
+                return stripos((string) $g['nik'], $search) !== false
+                    || stripos((string) $g['nama'], $search) !== false;
+            }));
+        }
+
+        $page = max(1, (int) $request->get('page', 1));
+        $perPage = 10;
+        $total = count($groups);
+        $items = array_slice($groups, ($page - 1) * $perPage, $perPage);
+
+        $pengunjungGroups = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items,
+            $total,
+            $perPage,
+            $page,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+            ]
+        );
 
         return view('dashboard.users.pemimpin.pengunjung', [
-            'pengunjungs' => $pengunjungs
+            'pengunjungGroups' => $pengunjungGroups,
+            'search' => $search,
+            'posyandu' => $posyandu,
         ]);
     }
-    
+
+    public function pengunjungRiwayat($nik) {
+        $posyandu = Posyandu::where('user_id', auth()->user()->id)->first();
+
+        $visits = collect();
+        if ($posyandu) {
+            $visits = Pengunjung::with('kader.user')
+                ->where('posyandu_id', $posyandu->id)
+                ->where('nik', $nik)
+                ->orderByDesc('tanggal_kunjungan')
+                ->orderByDesc('created_at')
+                ->get();
+        }
+
+        $first = $visits->sortBy('created_at')->first();
+        $latest = $visits->sortByDesc('created_at')->first();
+        $gdsAwal = $first->gds ?? 0;
+        $gdsLatest = $latest->gds ?? 0;
+        $trend = 'stabil';
+        if ($gdsAwal < $gdsLatest) {
+            $trend = 'naik';
+        } elseif ($gdsAwal > $gdsLatest) {
+            $trend = 'turun';
+        }
+
+        $history = $visits->map(function ($p) {
+            return [
+                'id' => (int) $p->id,
+                'tanggal_kunjungan' => (string) $p->tanggal_kunjungan,
+                'tanggal_formatted' => \Carbon\Carbon::parse($p->tanggal_kunjungan)->format('d M Y'),
+                'gds' => (float) $p->gds,
+                'gejala_klasik' => $p->gejala_klasik,
+                'kategori' => $p->kategori,
+                'alamat' => $p->alamat,
+                'rt' => $p->rt,
+                'rw' => $p->rw,
+                'nama' => $p->nama,
+                'kader' => optional(optional($p->kader)->user)->name,
+            ];
+        })->values()->toArray();
+
+        $chartAsc = $visits->sortBy('tanggal_kunjungan')->values();
+        $chartLabels = $chartAsc->map(function ($p) {
+            return \Carbon\Carbon::parse($p->tanggal_kunjungan)->format('d M Y');
+        })->toArray();
+        $chartData = $chartAsc->map(function ($p) {
+            return (float) $p->gds;
+        })->toArray();
+
+        return view('dashboard.users.pemimpin.pengunjung_riwayat', [
+            'nik' => $nik,
+            'nama' => $latest->nama ?? ($first->nama ?? '-'),
+            'alamat' => $latest->alamat ?? ($first->alamat ?? '-'),
+            'rt' => $latest->rt ?? ($first->rt ?? '-'),
+            'rw' => $latest->rw ?? ($first->rw ?? '-'),
+            'total_kunjungan' => $visits->count(),
+            'gds_terbaru' => $gdsLatest,
+            'gds_trend' => $trend,
+            'history' => $history,
+            'chartLabels' => $chartLabels,
+            'chartData' => $chartData,
+        ]);
+    }
 }
