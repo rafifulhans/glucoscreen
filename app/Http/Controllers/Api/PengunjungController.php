@@ -10,6 +10,7 @@ use App\Services\DiagnosaService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Auth\AuthenticationException; // Import ini untuk menangani autentikasi
 
 class PengunjungController extends Controller
@@ -344,8 +345,8 @@ class PengunjungController extends Controller
                 'nama' => 'required|string|max:255',
                 'nik' => 'required|string',
                 'alamat' => 'required|string',
-                'rt' => 'nullable|string|max:10',
-                'rw' => 'nullable|string|max:10',
+                'rt' => 'nullable|numeric|max:10',
+                'rw' => 'nullable|numeric|max:10',
                 'tanggal_kunjungan' => 'required|date',
                 'gds' => 'required|numeric',
                 'kategori' => 'nullable|string|in:normal,prediabetes,diabetes,ketoasidosis',
