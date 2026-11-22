@@ -345,8 +345,8 @@ class PengunjungController extends Controller
                 'nama' => 'required|string|max:255',
                 'nik' => 'required|string',
                 'alamat' => 'required|string',
-                'rt' => 'nullable|numeric|max:10',
-                'rw' => 'nullable|numeric|max:10',
+                'rt' => 'nullable|string|max:10',
+                'rw' => 'nullable|string|max:10',
                 'tanggal_kunjungan' => 'required|date',
                 'gds' => 'required|numeric',
                 'kategori' => 'nullable|string|in:normal,prediabetes,diabetes,ketoasidosis',
@@ -392,19 +392,35 @@ class PengunjungController extends Controller
             $gejala = !empty($gejalaKlasik);
             $kategori = DiagnosaService::tentukanKategori((float) $request->gds, $gejala);
 
-            $pengunjung = Pengunjung::create([
+            // NIK yang sudah terdaftar TIDAK memicu 422: baris kunjungan baru
+            // dibuat untuk tanggal berbeda (fitur "Tambah Data GDS" pasien lama).
+            // Bila tanggal + NIK + kader sama persis (dobel tap / kirim ulang),
+            // baris kunjungan itu diperbarui sehingga tidak ada duplikat.
+            $pengunjung = Pengunjung::firstOrNew([
+                'nik' => trim((string) $request->nik),
                 'tanggal_kunjungan' => $request->tanggal_kunjungan,
-                'nama' => $request->nama,
-                'nik' => $request->nik,
-                'alamat' => $request->alamat,
-                'rt' => $request->rt,
-                'rw' => $request->rw,
-                'gds' => $request->gds,
                 'kader_id' => $kader->id,
+            ]);
+
+            $pengunjung->fill([
+                'nama' => $request->nama,
+                'alamat' => $request->alamat,
+                'gds' => $request->gds,
                 'posyandu_id' => $posyandu->id,
                 'kategori' => $kategori, // Dihitung otomatis dari GDS + gejala (server-side)
                 'gejala_klasik' => $gejalaKlasik, // Dinormalisasi & disimpan bila ada isinya
             ]);
+
+            // rt/rw hanya ditimpa bila dikirim (identitas lama tetap utuh saat
+            // aplikasi mengirim body tanpa rt/rw).
+            if ($request->filled('rt')) {
+                $pengunjung->rt = $request->rt;
+            }
+            if ($request->filled('rw')) {
+                $pengunjung->rw = $request->rw;
+            }
+
+            $pengunjung->save();
 
             return response()->json([
                 'message' => 'Data pengunjung berhasil disimpan.',
